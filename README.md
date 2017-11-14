@@ -16,7 +16,7 @@ Import-Module -Name PSAxis -Prefix Axis
 
 ## Trademark Acknowledgements
 
-* Interlogix and TruPortal are registered trademarks of Interlogix United Technologies.
+* Axis is a registered trademark of Axis Communications AB.
 
 ## Donation
 
