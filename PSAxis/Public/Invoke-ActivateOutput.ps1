@@ -18,6 +18,11 @@ function Invoke-ActivateOutput {
         [Parameter(
             ValueFromPipelineByPropertyName=$true
         )]
+        [VapixVersion]$VapixVersion = [VapixVersion]::Vapix3,
+
+        [Parameter(
+            ValueFromPipelineByPropertyName=$true
+        )]
         [switch]$UseSSL = $Script:UseSSL,
 
         [Parameter(
@@ -39,10 +44,8 @@ function Invoke-ActivateOutput {
     }
     
     process {
-        # http://192.168.1.36/axis-cgi/io/output.cgi?action=1:/
-        $endPoint       = "axis-cgi/io/output.cgi"
+        $endPoint       = if($VapixVersion -eq [VapixVersion]::Vapix3 ) {"axis-cgi/io/port.cgi"} else {"axis-cgi/io/output.cgi"}
         $method         = "GET"
-        # $contentType    = "application/json"
         $uri            = "http" + $(if($UseSSL) { "s" }) + "://$($Host)/$($endPoint)"
 
         $query = @{

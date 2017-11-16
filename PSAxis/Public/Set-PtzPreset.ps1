@@ -1,4 +1,4 @@
-function Get-InputState {
+function Set-PtzPreset {
     [CmdletBinding()]
     param (
         [Parameter(
@@ -31,10 +31,10 @@ function Get-InputState {
         [switch]$IgnoreCertificateErrors = $Script:IgnoreCertificateErrors,
 
         [Parameter(
-            Mandatory=$true,
-            ValueFromPipelineByPropertyName=$true
+            
         )]
-        [int]$InputId = $null
+        [string]
+        $PresetName
     )
     
     begin {
@@ -44,14 +44,16 @@ function Get-InputState {
     }
     
     process {
-        $endPoint       = if($VapixVersion -eq [VapixVersion]::Vapix3 ) {"axis-cgi/io/port.cgi"} else {"axis-cgi/io/input.cgi"}
+        $endPoint       = if($VapixVersion -eq [VapixVersion]::Vapix3 ) {"axis-cgi/com/ptz.cgi"} else {"axis-cgi/com/ptz.cgi"}
         $method         = "GET"
         $uri            = "http" + $(if($UseSSL) { "s" }) + "://$($Host)/$($endPoint)"
 
         $query = @{
-            "checkactive"=$("${InputId}");
+            gotoserverpresetname="$($PresetName)";
         }
 
+        # Goto preset by name: gotoserverpresetname
+        # Goto preset by id: gotoserverpresetno
         Write-Verbose -Message "$($method) $($uri)"
         Write-Verbose -Message "Query:`n$(ConvertTo-Json $query)"
 
@@ -61,8 +63,7 @@ function Get-InputState {
             Body=$query;
             UseBasicParsing=$true;
         }
-        $response = Invoke-RestMethod @message -Credential $Credential
-        $response -split "\n" | ConvertFrom-String -Delimiter "=" -PropertyNames Input,State
+        Invoke-RestMethod @message -Credential $Credential | Out-Null
     }
 
     end {

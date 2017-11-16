@@ -1,4 +1,4 @@
-function Get-InputState {
+function Get-PtzPosition {
     [CmdletBinding()]
     param (
         [Parameter(
@@ -28,13 +28,7 @@ function Get-InputState {
         [Parameter(
             ValueFromPipelineByPropertyName=$true
         )]
-        [switch]$IgnoreCertificateErrors = $Script:IgnoreCertificateErrors,
-
-        [Parameter(
-            Mandatory=$true,
-            ValueFromPipelineByPropertyName=$true
-        )]
-        [int]$InputId = $null
+        [switch]$IgnoreCertificateErrors = $Script:IgnoreCertificateErrors
     )
     
     begin {
@@ -44,12 +38,12 @@ function Get-InputState {
     }
     
     process {
-        $endPoint       = if($VapixVersion -eq [VapixVersion]::Vapix3 ) {"axis-cgi/io/port.cgi"} else {"axis-cgi/io/input.cgi"}
+        $endPoint       = if($VapixVersion -eq [VapixVersion]::Vapix3 ) {"axis-cgi/com/ptz.cgi"} else {""}
         $method         = "GET"
         $uri            = "http" + $(if($UseSSL) { "s" }) + "://$($Host)/$($endPoint)"
 
         $query = @{
-            "checkactive"=$("${InputId}");
+            query="position";
         }
 
         Write-Verbose -Message "$($method) $($uri)"
@@ -62,7 +56,7 @@ function Get-InputState {
             UseBasicParsing=$true;
         }
         $response = Invoke-RestMethod @message -Credential $Credential
-        $response -split "\n" | ConvertFrom-String -Delimiter "=" -PropertyNames Input,State
+        $response -split "\n" | ForEach-Object { ConvertFrom-String $_ -Delimiter "=" -PropertyNames Item,Value  }
     }
 
     end {
