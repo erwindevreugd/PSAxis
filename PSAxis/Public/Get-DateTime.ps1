@@ -1,4 +1,4 @@
-function Set-PtzPreset {
+function Get-DateTime {
     [CmdletBinding()]
     param (
         [Parameter(
@@ -33,20 +33,7 @@ function Set-PtzPreset {
             Mandatory=$false,
             ValueFromPipelineByPropertyName=$true
         )]
-        [switch]$IgnoreCertificateErrors = $Script:IgnoreCertificateErrors,
-
-        [Parameter(
-            Mandatory=$false,
-            ValueFromPipelineByPropertyName=$true
-        )]
-        [ValidateRange(1,9999)]
-        [int]$Camera = 1,
-
-        [Parameter(
-            Mandatory=$true,
-            ValueFromPipelineByPropertyName=$true
-        )]
-        [string]$PresetName
+        [switch]$IgnoreCertificateErrors = $Script:IgnoreCertificateErrors
     )
     
     begin {
@@ -56,17 +43,14 @@ function Set-PtzPreset {
     }
     
     process {
-        $endPoint       = if($VapixVersion -eq [VapixVersion]::Vapix3 ) {"axis-cgi/com/ptz.cgi"} else {"axis-cgi/com/ptz.cgi"}
+        $endPoint       = if($VapixVersion -eq [VapixVersion]::Vapix3 ) {"axis-cgi/date.cgi"} else {"axis-cgi/date.cgi"}
         $method         = "GET"
         $uri            = "http" + $(if($UseSSL) { "s" }) + "://$($Host)/$($endPoint)"
 
         $query = @{
-            camera=$($Camera);
-            gotoserverpresetname="$($PresetName)";
+            action="get";
         }
 
-        # Goto preset by name: gotoserverpresetname
-        # Goto preset by id: gotoserverpresetno
         Write-Verbose -Message "$($method) $($uri)"
         Write-Verbose -Message "Query:`n$(ConvertTo-Json $query)"
 
@@ -79,7 +63,16 @@ function Set-PtzPreset {
         if ($Credential -ne [pscredential]::Empty) {
             $message.Add("Credential", $Credential)
         }
-        Invoke-RestMethod @message | Out-Null
+        $response = Invoke-RestMethod @message
+        
+        New-Object -TypeName PSObject -Property @{
+            Host=$Host;
+            Credential=$Credential;
+            UseSSL=$UseSSL;
+            IgnoreCertificateErrors=$IgnoreCertificateErrors;
+            VapixVersion=$VapixVersion;
+            DateTime=[DateTime]$response;
+        }
     }
 
     end {

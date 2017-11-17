@@ -1,4 +1,4 @@
-function Set-PtzPreset {
+function Restart-Server {
     [CmdletBinding()]
     param (
         [Parameter(
@@ -33,20 +33,7 @@ function Set-PtzPreset {
             Mandatory=$false,
             ValueFromPipelineByPropertyName=$true
         )]
-        [switch]$IgnoreCertificateErrors = $Script:IgnoreCertificateErrors,
-
-        [Parameter(
-            Mandatory=$false,
-            ValueFromPipelineByPropertyName=$true
-        )]
-        [ValidateRange(1,9999)]
-        [int]$Camera = 1,
-
-        [Parameter(
-            Mandatory=$true,
-            ValueFromPipelineByPropertyName=$true
-        )]
-        [string]$PresetName
+        [switch]$IgnoreCertificateErrors = $Script:IgnoreCertificateErrors
     )
     
     begin {
@@ -56,24 +43,15 @@ function Set-PtzPreset {
     }
     
     process {
-        $endPoint       = if($VapixVersion -eq [VapixVersion]::Vapix3 ) {"axis-cgi/com/ptz.cgi"} else {"axis-cgi/com/ptz.cgi"}
+        $endPoint       = if($VapixVersion -eq [VapixVersion]::Vapix3 ) {"axis-cgi/restart.cgi"} else {"axis-cgi/restart.cgi"}
         $method         = "GET"
         $uri            = "http" + $(if($UseSSL) { "s" }) + "://$($Host)/$($endPoint)"
 
-        $query = @{
-            camera=$($Camera);
-            gotoserverpresetname="$($PresetName)";
-        }
-
-        # Goto preset by name: gotoserverpresetname
-        # Goto preset by id: gotoserverpresetno
         Write-Verbose -Message "$($method) $($uri)"
-        Write-Verbose -Message "Query:`n$(ConvertTo-Json $query)"
 
         $message = @{
             Uri=$uri;
             Method=$method;
-            Body=$query;
             UseBasicParsing=$true;
         }
         if ($Credential -ne [pscredential]::Empty) {

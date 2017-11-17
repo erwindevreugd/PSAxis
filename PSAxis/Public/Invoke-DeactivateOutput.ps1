@@ -13,19 +13,24 @@ function Invoke-DeactivateOutput {
             Mandatory=$false,
             ValueFromPipelineByPropertyName=$true
         )]
-        [pscredential]$Credential,
+        [ValidateNotNull()]
+        [System.Management.Automation.Credential()]
+        [pscredential]$Credential = [PSCredential]::Empty,
 
         [Parameter(
+            Mandatory=$false,
             ValueFromPipelineByPropertyName=$true
         )]
         [VapixVersion]$VapixVersion = [VapixVersion]::Vapix3,
 
         [Parameter(
+            Mandatory=$false,
             ValueFromPipelineByPropertyName=$true
         )]
         [switch]$UseSSL = $Script:UseSSL,
 
         [Parameter(
+            Mandatory=$false,
             ValueFromPipelineByPropertyName=$true
         )]
         [switch]$IgnoreCertificateErrors = $Script:IgnoreCertificateErrors,
@@ -61,7 +66,10 @@ function Invoke-DeactivateOutput {
             Body=$query;
             UseBasicParsing=$true;
         }
-        Invoke-RestMethod @message -Credential $Credential | Out-Null
+        if ($Credential -ne [pscredential]::Empty) {
+            $message.Add("Credential", $Credential)
+        }
+        Invoke-RestMethod @message | Out-Null
     }
 
     end {

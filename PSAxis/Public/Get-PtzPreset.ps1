@@ -13,22 +13,33 @@ function Get-PtzPreset {
             Mandatory=$false,
             ValueFromPipelineByPropertyName=$true
         )]
-        [pscredential]$Credential,
+        [ValidateNotNull()]
+        [System.Management.Automation.Credential()]
+        [pscredential]$Credential = [PSCredential]::Empty,
 
         [Parameter(
+            Mandatory=$false,
             ValueFromPipelineByPropertyName=$true
         )]
         [VapixVersion]$VapixVersion = [VapixVersion]::Vapix3,
 
         [Parameter(
+            Mandatory=$false,
             ValueFromPipelineByPropertyName=$true
         )]
         [switch]$UseSSL = $Script:UseSSL,
 
         [Parameter(
+            Mandatory=$false,
             ValueFromPipelineByPropertyName=$true
         )]
-        [switch]$IgnoreCertificateErrors = $Script:IgnoreCertificateErrors
+        [switch]$IgnoreCertificateErrors = $Script:IgnoreCertificateErrors,
+
+        [Parameter(
+            ValueFromPipelineByPropertyName=$true
+        )]
+        [ValidateRange(1,9999)]
+        [int]$Camera = 1
     )
     
     begin {
@@ -44,6 +55,7 @@ function Get-PtzPreset {
 
         $query = @{
             query="presetposcam";
+            camera=$($Camera);
         }
 
         Write-Verbose -Message "$($method) $($uri)"
@@ -55,8 +67,11 @@ function Get-PtzPreset {
             Body=$query;
             UseBasicParsing=$true;
         }
-        $response = Invoke-RestMethod @message -Credential $Credential
-        $response -split "\n" | ForEach-Object { ConvertFrom-String $_ -Delimiter "=" -PropertyNames Position,Name  }
+        if ($Credential -ne [pscredential]::Empty) {
+            $message.Add("Credential", $Credential)
+        }
+        $response = Invoke-RestMethod @message
+        $response -split "\n" | ForEach-Object { ConvertFrom-String $_ -Delimiter "=" -PropertyNames PresetPosition,PresetName  }
     }
 
     end {

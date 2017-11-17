@@ -1,4 +1,4 @@
-function Set-PtzPreset {
+function Get-VideoStatus {
     [CmdletBinding()]
     param (
         [Parameter(
@@ -39,14 +39,7 @@ function Set-PtzPreset {
             Mandatory=$false,
             ValueFromPipelineByPropertyName=$true
         )]
-        [ValidateRange(1,9999)]
-        [int]$Camera = 1,
-
-        [Parameter(
-            Mandatory=$true,
-            ValueFromPipelineByPropertyName=$true
-        )]
-        [string]$PresetName
+        [int[]]$Channel = 1
     )
     
     begin {
@@ -56,17 +49,14 @@ function Set-PtzPreset {
     }
     
     process {
-        $endPoint       = if($VapixVersion -eq [VapixVersion]::Vapix3 ) {"axis-cgi/com/ptz.cgi"} else {"axis-cgi/com/ptz.cgi"}
+        $endPoint       = if($VapixVersion -eq [VapixVersion]::Vapix3 ) {"axis-cgi/videostatus.cgi"} else {"axis-cgi/videostatus.cgi"}
         $method         = "GET"
         $uri            = "http" + $(if($UseSSL) { "s" }) + "://$($Host)/$($endPoint)"
 
         $query = @{
-            camera=$($Camera);
-            gotoserverpresetname="$($PresetName)";
+            status=$($Channel -join ",");
         }
 
-        # Goto preset by name: gotoserverpresetname
-        # Goto preset by id: gotoserverpresetno
         Write-Verbose -Message "$($method) $($uri)"
         Write-Verbose -Message "Query:`n$(ConvertTo-Json $query)"
 
@@ -79,7 +69,8 @@ function Set-PtzPreset {
         if ($Credential -ne [pscredential]::Empty) {
             $message.Add("Credential", $Credential)
         }
-        Invoke-RestMethod @message | Out-Null
+        $response = Invoke-RestMethod @message
+        $response -split "\n" | ForEach-Object { ConvertFrom-String $_ -Delimiter "=" -PropertyNames Channel,Status  }
     }
 
     end {

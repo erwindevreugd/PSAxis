@@ -13,22 +13,34 @@ function Get-PtzPosition {
             Mandatory=$false,
             ValueFromPipelineByPropertyName=$true
         )]
-        [pscredential]$Credential,
+        [ValidateNotNull()]
+        [System.Management.Automation.Credential()]
+        [pscredential]$Credential = [PSCredential]::Empty,
 
         [Parameter(
+            Mandatory=$false,
             ValueFromPipelineByPropertyName=$true
         )]
         [VapixVersion]$VapixVersion = [VapixVersion]::Vapix3,
 
         [Parameter(
+            Mandatory=$false,
             ValueFromPipelineByPropertyName=$true
         )]
         [switch]$UseSSL = $Script:UseSSL,
 
         [Parameter(
+            Mandatory=$false,
             ValueFromPipelineByPropertyName=$true
         )]
-        [switch]$IgnoreCertificateErrors = $Script:IgnoreCertificateErrors
+        [switch]$IgnoreCertificateErrors = $Script:IgnoreCertificateErrors,
+
+        [Parameter(
+            Mandatory=$false,
+            ValueFromPipelineByPropertyName=$true
+        )]
+        [ValidateRange(1,9999)]
+        [int]$Camera = 1
     )
     
     begin {
@@ -38,12 +50,13 @@ function Get-PtzPosition {
     }
     
     process {
-        $endPoint       = if($VapixVersion -eq [VapixVersion]::Vapix3 ) {"axis-cgi/com/ptz.cgi"} else {""}
+        $endPoint       = if($VapixVersion -eq [VapixVersion]::Vapix3 ) {"axis-cgi/com/ptz.cgi"} else {"axis-cgi/com/ptz.cgi"}
         $method         = "GET"
         $uri            = "http" + $(if($UseSSL) { "s" }) + "://$($Host)/$($endPoint)"
 
         $query = @{
             query="position";
+            camera=$($Camera);
         }
 
         Write-Verbose -Message "$($method) $($uri)"
@@ -55,7 +68,10 @@ function Get-PtzPosition {
             Body=$query;
             UseBasicParsing=$true;
         }
-        $response = Invoke-RestMethod @message -Credential $Credential
+        if ($Credential -ne [pscredential]::Empty) {
+            $message.Add("Credential", $Credential)
+        }
+        $response = Invoke-RestMethod @message
         $response -split "\n" | ForEach-Object { ConvertFrom-String $_ -Delimiter "=" -PropertyNames Item,Value  }
     }
 

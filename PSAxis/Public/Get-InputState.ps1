@@ -13,19 +13,24 @@ function Get-InputState {
             Mandatory=$false,
             ValueFromPipelineByPropertyName=$true
         )]
-        [pscredential]$Credential,
+        [ValidateNotNull()]
+        [System.Management.Automation.Credential()]
+        [pscredential]$Credential = [PSCredential]::Empty,
 
         [Parameter(
+            Mandatory=$false,
             ValueFromPipelineByPropertyName=$true
         )]
         [VapixVersion]$VapixVersion = [VapixVersion]::Vapix3,
 
         [Parameter(
+            Mandatory=$false,
             ValueFromPipelineByPropertyName=$true
         )]
         [switch]$UseSSL = $Script:UseSSL,
 
         [Parameter(
+            Mandatory=$false,
             ValueFromPipelineByPropertyName=$true
         )]
         [switch]$IgnoreCertificateErrors = $Script:IgnoreCertificateErrors,
@@ -61,7 +66,10 @@ function Get-InputState {
             Body=$query;
             UseBasicParsing=$true;
         }
-        $response = Invoke-RestMethod @message -Credential $Credential
+        if ($Credential -ne [pscredential]::Empty) {
+            $message.Add("Credential", $Credential)
+        }
+        $response = Invoke-RestMethod @message
         $response -split "\n" | ConvertFrom-String -Delimiter "=" -PropertyNames Input,State
     }
 
