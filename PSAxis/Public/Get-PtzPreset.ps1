@@ -71,7 +71,9 @@ function Get-PtzPreset {
             $message.Add("Credential", $Credential)
         }
         $response = Invoke-RestMethod @message
-        $response -split "\n" | ForEach-Object { ConvertFrom-String $_ -Delimiter "=" -PropertyNames PresetPosition,PresetName  }
+        $response -split "\n" | ForEach-Object { 
+            ConvertFrom-String $_ -Delimiter "=" -PropertyNames PresetPosition,PresetName 
+         }
     }
 
     end {

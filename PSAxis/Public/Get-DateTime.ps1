@@ -66,11 +66,6 @@ function Get-DateTime {
         $response = Invoke-RestMethod @message
         
         New-Object -TypeName PSObject -Property @{
-            Host=$Host;
-            Credential=$Credential;
-            UseSSL=$UseSSL;
-            IgnoreCertificateErrors=$IgnoreCertificateErrors;
-            VapixVersion=$VapixVersion;
             DateTime=[DateTime]$response;
         }
     }

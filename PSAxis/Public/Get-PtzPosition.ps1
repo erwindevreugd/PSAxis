@@ -72,7 +72,9 @@ function Get-PtzPosition {
             $message.Add("Credential", $Credential)
         }
         $response = Invoke-RestMethod @message
-        $response -split "\n" | ForEach-Object { ConvertFrom-String $_ -Delimiter "=" -PropertyNames Item,Value  }
+        $response -split "\n" | ForEach-Object { 
+            ConvertFrom-String $_ -Delimiter "=" -PropertyNames Item,Value  
+        }
     }
 
     end {
